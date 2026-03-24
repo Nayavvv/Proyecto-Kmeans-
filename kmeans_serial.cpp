@@ -1,3 +1,4 @@
+// Este código implementa K-means en versión serial
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -17,6 +18,7 @@ struct Point {
     int cluster = -1;
 };
 
+// distancia euclidiana al cuadrado entre dos puntos
 double squaredDistance(const vector<double>& a, const vector<double>& b) {
     double sum = 0.0;
     for (size_t i = 0; i < a.size(); i++) {
@@ -47,6 +49,7 @@ vector<Point> readCSV(const string& filename, int& dimensions) {
             coords.push_back(stod(value));
         }
 
+        // Saber dimension de los datos 
         if (dimensions == -1) {
             dimensions = (int)coords.size();
             if (dimensions != 2 && dimensions != 3) {
@@ -68,6 +71,7 @@ vector<Point> readCSV(const string& filename, int& dimensions) {
     return points;
 }
 
+//K centroides aleatorios 
 vector<vector<double>> initializeCentroids(const vector<Point>& points, int k) {
     if (k <= 0 || k > (int)points.size()) {
         throw runtime_error("k debe ser mayor que 0 y menor o igual al numero de puntos.");
@@ -75,8 +79,7 @@ vector<vector<double>> initializeCentroids(const vector<Point>& points, int k) {
 
     vector<vector <double>> centroids;
     unordered_set<int> used;
-
-    random_device rd;
+    
     mt19937 gen(42);
     uniform_int_distribution<> dist(0, (int)points.size() - 1);
 
@@ -91,6 +94,7 @@ vector<vector<double>> initializeCentroids(const vector<Point>& points, int k) {
     return centroids;
 }
 
+//Asignacion de puntos a su centroide mas cercano 
 bool assignClusters(vector<Point>& points, const vector<vector<double>>& centroids) {
     bool changed = false;
 
@@ -115,6 +119,7 @@ bool assignClusters(vector<Point>& points, const vector<vector<double>>& centroi
     return changed;
 }
 
+//Se recalculan los centroides
 void updateCentroids(const vector<Point>& points, vector<vector<double>>& centroids) {
     int k = (int)centroids.size();
     int dims = (int)centroids[0].size();
@@ -144,6 +149,7 @@ void writeCSV(const string& filename, const vector<Point>& points, int dims) {
         throw runtime_error("No se pudo crear el archivo de salida: " + filename);
     }
 
+    //Distinguir datos por dimension 
     if (dims == 2) {
         file << "x,y,cluster\n";
         for (const auto& p : points) {
@@ -183,6 +189,7 @@ int main(int argc, char* argv[]) {
 
         auto start = chrono::high_resolution_clock::now();
 
+        //Ejecutar hasta converger o llegar al mexicmo de iteraciones 
         while (changed && iter < maxIters) {
             changed = assignClusters(points, centroids);
             updateCentroids(points, centroids);
