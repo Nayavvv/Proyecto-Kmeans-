@@ -29,6 +29,7 @@ double squaredDistance(const vector<double>& a, const vector<double>& b) {
     return sum;
 }
 
+// Lee el archivo csv y guarda sus puntos en un vector 
 vector<Point> readCSV(const string& filename, int& dimensions) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -40,7 +41,7 @@ vector<Point> readCSV(const string& filename, int& dimensions) {
     dimensions = -1;
 
     while (getline(file, line)) {
-        if (line.empty()) continue;
+        if (line.empty()) continue; //ignoramos líneas vacías
 
         stringstream ss(line);
         string value;
@@ -49,7 +50,7 @@ vector<Point> readCSV(const string& filename, int& dimensions) {
         while (getline(ss, value, ',')) {
             coords.push_back(stod(value));
         }
-
+        // determina la dimensión 
         if (dimensions == -1) {
             dimensions = (int)coords.size();
             if (dimensions != 2 && dimensions != 3) {
@@ -74,6 +75,7 @@ vector<Point> readCSV(const string& filename, int& dimensions) {
     return points;
 }
 
+//Incializamos los centroides a partir de k puntos random del dataset 
 vector<vector<double>> initializeCentroids(const vector<Point>& points, int k) {
     if (k <= 0 || k > (int)points.size()) {
         throw runtime_error("k debe ser mayor que 0 y menor o igual al numero de puntos.");
@@ -96,6 +98,7 @@ vector<vector<double>> initializeCentroids(const vector<Point>& points, int k) {
     return centroids;
 }
 
+//Usando paralelización va asignando puntos al centroide más cercano 
 bool assignClustersParallel(vector<Point>& points, const vector<vector<double>>& centroids) {
     int n = (int)points.size();
     int k = (int)centroids.size();
@@ -106,6 +109,7 @@ bool assignClustersParallel(vector<Point>& points, const vector<vector<double>>&
         double bestDist = numeric_limits<double>::max();
         int bestCluster = -1;
 
+        //Buscamos el centroide mas cercano al punto actual 
         for (int c = 0; c < k; c++) {
             double dist = squaredDistance(points[i].coords, centroids[c]);
             if (dist < bestDist) {
@@ -114,6 +118,7 @@ bool assignClustersParallel(vector<Point>& points, const vector<vector<double>>&
             }
         }
 
+        // Actualiza si hubo un cambio de cluster 
         if (points[i].cluster != bestCluster) {
             points[i].cluster = bestCluster;
 
@@ -125,6 +130,7 @@ bool assignClustersParallel(vector<Point>& points, const vector<vector<double>>&
     return changed == 1;
 }
 
+//Actualizamos las posiciones de los centroides 
 void updateCentroidsParallel(const vector<Point>& points, vector<vector<double>>& centroids) {
     int k = (int)centroids.size();
     int dims = (int)centroids[0].size();
@@ -162,7 +168,8 @@ void updateCentroidsParallel(const vector<Point>& points, vector<vector<double>>
             }
         }
     }
-
+    
+    //Nuevo centroide de cada cluster 
     for (int c = 0; c < k; c++) {
         if (counts[c] > 0) {
             for (int d = 0; d < dims; d++) {
@@ -178,6 +185,7 @@ void writeCSV(const string& filename, const vector<Point>& points, int dims) {
         throw runtime_error("No se pudo crear el archivo de salida: " + filename);
     }
 
+    // Guarda los puntos segun sus diemnsiones 
     if (dims == 2) {
         file << "x,y,cluster\n";
         for (const auto& p : points) {
@@ -218,7 +226,8 @@ int main(int argc, char* argv[]) {
         bool changed = true;
 
         double start = omp_get_wtime();
-
+        
+        // Ejecuta K-means hasta converger o llegar al máximo de iteraciones
         while (changed && iter < maxIters) {
             changed = assignClustersParallel(points, centroids);
             updateCentroidsParallel(points, centroids);
