@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/opt/libomp/include",
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX15.sdk/usr/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "macos-clang-x64",
+            "compilerArgs": [
+                "-Xpreprocessor",
+                "-fopenmp"
+            ]
+        }
+    ],
+    "version": 4
+}
